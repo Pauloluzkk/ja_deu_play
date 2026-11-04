@@ -2,7 +2,8 @@
 // aviso de mudança de usuário, validação dos campos e tradução dos erros.
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hive_ce_flutter/hive_flutter.dart';
+
+import 'cache_service.dart';
 
 class AuthService {
   static FirebaseAuth get _auth => FirebaseAuth.instance;
@@ -23,11 +24,12 @@ class AuthService {
     await _auth.signInWithEmailAndPassword(email: email, password: senha);
   }
 
-  /// Apaga a cópia local da lista e encerra a sessão. Assim o próximo
-  /// usuário do aparelho não vê os filmes de quem saiu.
+  /// Encerra a sessão e apaga a cópia local, para o próximo usuário do
+  /// aparelho não ver os filmes de quem saiu. Limpa depois do signOut para
+  /// um dado que chegue do Firestore não voltar a encher o cache.
   static Future<void> sair() async {
-    await Hive.box('filmes_cache').clear();
     await _auth.signOut();
+    await CacheService.limparTudo();
   }
 
   /// Transforma um erro do login ou do cadastro em mensagem para o usuário.

@@ -180,7 +180,21 @@ void main() {
   test('Erros do Firestore viram mensagens em português', () {
     expect(
       FirestoreService.traduzirErro(TimeoutException('')),
-      'Sem resposta do servidor. Verifique sua internet.',
+      'Sem internet. A alteração será enviada quando a conexão voltar, '
+      'se o app continuar aberto.',
+    );
+    expect(FirestoreService.ehErroDeConexao(TimeoutException('')), isTrue);
+    expect(
+      FirestoreService.ehErroDeConexao(
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+      ),
+      isTrue,
+    );
+    expect(
+      FirestoreService.ehErroDeConexao(
+        FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'),
+      ),
+      isFalse,
     );
     expect(
       FirestoreService.traduzirErro(

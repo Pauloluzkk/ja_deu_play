@@ -73,6 +73,13 @@ class Filme {
     return null;
   }
 
+  /// Usado para ordenar a lista: o título criado por último vem primeiro.
+  static int compararMaisNovoPrimeiro(Filme a, Filme b) {
+    final dataA = a.criadoEm ?? DateTime(0);
+    final dataB = b.criadoEm ?? DateTime(0);
+    return dataB.compareTo(dataA);
+  }
+
   String get tipoTexto => tipo == 'serie' ? 'Série' : 'Filme';
 
   String get statusTexto => status == 'assistido' ? 'Assistido' : 'Quero ver';

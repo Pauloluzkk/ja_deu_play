@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/filme.dart';
+import '../services/cache_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/botao_carregando.dart';
 import '../widgets/estrelas_nota.dart';
@@ -88,11 +89,11 @@ class _FormularioScreenState extends State<FormularioScreen> {
         criadoEm: original?.criadoEm,
       );
 
-      if (_editando) {
-        await FirestoreService.atualizar(filme);
-      } else {
-        await FirestoreService.adicionar(filme);
-      }
+      final filmeSalvo = _editando
+          ? await FirestoreService.atualizar(filme)
+          : await FirestoreService.adicionar(filme);
+      // O Firestore confirmou: guarda também a cópia local
+      await CacheService.salvar(filmeSalvo);
       if (mounted) Navigator.of(context).pop();
     } catch (erro) {
       if (mounted) {

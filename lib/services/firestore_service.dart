@@ -11,7 +11,7 @@ import 'auth_service.dart';
 class FirestoreService {
   // Sem internet, o Firestore não dá erro: a escrita fica esperando a conexão
   // voltar. O tempo limite evita um carregamento que nunca termina.
-  static const _tempoLimite = Duration(seconds: 15);
+  static const _tempoLimite = Duration(seconds: 10);
 
   static CollectionReference<Map<String, dynamic>> get _colecao =>
       FirebaseFirestore.instance.collection('watchlist');
@@ -34,25 +34,22 @@ class FirestoreService {
         // Avisa também quando a resposta do servidor chega sem mudar os dados
         .snapshots(includeMetadataChanges: true)
         .map((consulta) {
-      // Vazio vindo do cache significa "não consegui consultar o servidor",
-      // e não que a lista do usuário está vazia.
-      if (consulta.docs.isEmpty && consulta.metadata.isFromCache) {
+      // Dados da memória do Firestore não foram confirmados pelo servidor:
+      // o app está sem conexão. Só dados confirmados podem ir para o Hive.
+      if (consulta.metadata.isFromCache) {
         throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
       }
 
       final filmes = consulta.docs
           .map((documento) => Filme.fromMap(documento.id, documento.data()))
           .toList();
-      filmes.sort((a, b) {
-        final dataA = a.criadoEm ?? DateTime(0);
-        final dataB = b.criadoEm ?? DateTime(0);
-        return dataB.compareTo(dataA);
-      });
+      filmes.sort(Filme.compararMaisNovoPrimeiro);
       return filmes;
     });
   }
 
-  static Future<void> adicionar(Filme filme) async {
+  /// Retorna o título como foi salvo, já com userId e datas preenchidos.
+  static Future<Filme> adicionar(Filme filme) async {
     final agora = DateTime.now();
     final dados = filme.toMap();
     dados['userId'] = _idUsuario;
@@ -60,24 +57,35 @@ class FirestoreService {
     dados['atualizadoEm'] = agora;
 
     await _colecao.doc(filme.id).set(dados).timeout(_tempoLimite);
+    return Filme.fromMap(filme.id, dados);
   }
 
-  static Future<void> atualizar(Filme filme) async {
+  /// Retorna o título como foi salvo, já com userId e datas preenchidos.
+  static Future<Filme> atualizar(Filme filme) async {
     final dados = filme.toMap();
     dados['userId'] = _idUsuario;
     dados['atualizadoEm'] = DateTime.now();
 
     await _colecao.doc(filme.id).update(dados).timeout(_tempoLimite);
+    return Filme.fromMap(filme.id, dados);
   }
 
   static Future<void> excluir(String id) async {
     await _colecao.doc(id).delete().timeout(_tempoLimite);
   }
 
+  /// Diz se o erro foi por falta de conexão, e não por outro motivo.
+  static bool ehErroDeConexao(Object? erro) {
+    if (erro is TimeoutException) return true;
+    return erro is FirebaseException && erro.code == 'unavailable';
+  }
+
   /// Transforma um erro do Firestore em mensagem para o usuário.
   static String traduzirErro(Object? erro) {
+    // Após o tempo limite, o Firestore continua com a escrita na fila
     if (erro is TimeoutException) {
-      return 'Sem resposta do servidor. Verifique sua internet.';
+      return 'Sem internet. A alteração será enviada quando a conexão voltar, '
+          'se o app continuar aberto.';
     }
     if (erro is FirebaseException) {
       switch (erro.code) {
