@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import 'firebase_options.dart';
-import 'screens/home_screen.dart';
+import 'screens/auth_gate.dart';
 import 'services/preferencias_service.dart';
 import 'theme/app_theme.dart';
 
@@ -40,7 +40,7 @@ class JaDeuPlayApp extends StatelessWidget {
       darkTheme: AppTheme.escuro,
       // Por enquanto fixo; na etapa 5 virá do SharedPreferences
       themeMode: ThemeMode.light,
-      home: const HomeScreen(),
+      home: const AuthGate(),
     );
   }
 }
