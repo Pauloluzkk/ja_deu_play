@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "530879128540",
+    "project_id": "ja-deu-play",
+    "storage_bucket": "ja-deu-play.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530879128540:android:2b11bf78b0755cfa5d2519",
+        "android_client_info": {
+          "package_name": "com.example.ja_deu_play"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSTEUgqotsEGABQexPF3XVIJPLPqHC6MQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
