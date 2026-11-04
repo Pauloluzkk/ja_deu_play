@@ -1,0 +1,24 @@
+// Regras de segurança do Firestore: cada usuário só lê e altera os próprios
+// documentos da watchlist. Qualquer outro caminho do banco continua bloqueado.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /watchlist/{id} {
+      function usuarioLogado() {
+        return request.auth != null;
+      }
+
+      allow read, delete: if usuarioLogado()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if usuarioLogado()
+        && request.resource.data.userId == request.auth.uid;
+
+      allow update: if usuarioLogado()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}

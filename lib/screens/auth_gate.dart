@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../widgets/logo_app.dart';
-import 'home_screen.dart';
+import 'lista_screen.dart';
 import 'login_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -34,9 +34,8 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        final usuario = snapshot.data;
-        if (usuario == null) return const LoginScreen();
-        return HomeScreen(email: usuario.email ?? '');
+        if (snapshot.data == null) return const LoginScreen();
+        return const ListaScreen();
       },
     );
   }

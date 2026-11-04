@@ -11,6 +11,9 @@ class AuthService {
   /// usuário logado.
   static Stream<User?> get usuarioMudou => _auth.authStateChanges();
 
+  /// Id do usuário logado, usado para separar os dados de cada um.
+  static String? get idUsuario => _auth.currentUser?.uid;
+
   /// Cria a conta. O Firebase já deixa o novo usuário logado.
   static Future<void> cadastrar(String email, String senha) async {
     await _auth.createUserWithEmailAndPassword(email: email, password: senha);
