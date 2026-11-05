@@ -80,6 +80,23 @@ class Filme {
     return dataB.compareTo(dataA);
   }
 
+  /// Usado para ordenar por título, de A a Z, sem separar maiúsculas.
+  static int compararPorTitulo(Filme a, Filme b) {
+    return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
+  }
+
+  /// Usado para ordenar por ano: o mais recente vem primeiro.
+  static int compararPorAno(Filme a, Filme b) {
+    final resultado = b.ano.compareTo(a.ano);
+    return resultado != 0 ? resultado : compararPorTitulo(a, b);
+  }
+
+  /// Usado para ordenar por nota: a maior vem primeiro.
+  static int compararPorNota(Filme a, Filme b) {
+    final resultado = b.nota.compareTo(a.nota);
+    return resultado != 0 ? resultado : compararPorTitulo(a, b);
+  }
+
   String get tipoTexto => tipo == 'serie' ? 'Série' : 'Filme';
 
   String get statusTexto => status == 'assistido' ? 'Assistido' : 'Quero ver';

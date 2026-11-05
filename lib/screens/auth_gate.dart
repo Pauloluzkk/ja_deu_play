@@ -10,13 +10,24 @@ import '../widgets/logo_app.dart';
 import 'lista_screen.dart';
 import 'login_screen.dart';
 
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+class AuthGate extends StatefulWidget {
+  final VoidCallback aoAlternarTema;
+
+  const AuthGate({super.key, required this.aoAlternarTema});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  // Criado uma única vez: trocar o tema reconstrói esta tela, e um stream novo
+  // voltaria para o carregamento e faria a lista perder o estado.
+  final Stream<User?> _usuario = AuthService.usuarioMudou;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: AuthService.usuarioMudou,
+      stream: _usuario,
       builder: (context, snapshot) {
         // O Firebase ainda está verificando se existe uma sessão salva
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -35,7 +46,7 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.data == null) return const LoginScreen();
-        return const ListaScreen();
+        return ListaScreen(aoAlternarTema: widget.aoAlternarTema);
       },
     );
   }

@@ -24,6 +24,11 @@ class AuthService {
     await _auth.signInWithEmailAndPassword(email: email, password: senha);
   }
 
+  /// Pede ao Firebase para enviar o e-mail com o link de redefinir a senha.
+  static Future<void> enviarRedefinicaoSenha(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
   /// Encerra a sessão e apaga a cópia local, para o próximo usuário do
   /// aparelho não ver os filmes de quem saiu. Limpa depois do signOut para
   /// um dado que chegue do Firestore não voltar a encher o cache.

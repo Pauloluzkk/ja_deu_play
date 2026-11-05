@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/prefs_service.dart';
 import '../widgets/botao_carregando.dart';
 import '../widgets/logo_app.dart';
 
@@ -39,7 +40,9 @@ class _CadastroScreenState extends State<CadastroScreen> {
 
     setState(() => _carregando = true);
     try {
-      await AuthService.cadastrar(_campoEmail.text.trim(), _campoSenha.text);
+      final email = _campoEmail.text.trim();
+      await AuthService.cadastrar(email, _campoSenha.text);
+      await PrefsService.salvarUltimoEmail(email);
       // O AuthGate já trocou para a lista por baixo desta tela, que foi
       // aberta com push. Sem este pop, o cadastro ficaria na frente da lista.
       if (mounted) Navigator.of(context).pop();

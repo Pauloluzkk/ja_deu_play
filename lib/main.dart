@@ -1,5 +1,5 @@
 // Ponto de entrada do app: prepara Firebase, Hive e preferências
-// antes de abrir a primeira tela.
+// antes de abrir a primeira tela, e guarda o tema claro ou escuro.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,7 +8,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import 'firebase_options.dart';
 import 'screens/auth_gate.dart';
-import 'services/preferencias_service.dart';
+import 'services/prefs_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -24,13 +24,27 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('filmes_cache');
 
-  await PreferenciasService.carregar();
+  await PrefsService.carregar();
 
   runApp(const JaDeuPlayApp());
 }
 
-class JaDeuPlayApp extends StatelessWidget {
+class JaDeuPlayApp extends StatefulWidget {
   const JaDeuPlayApp({super.key});
+
+  @override
+  State<JaDeuPlayApp> createState() => _JaDeuPlayAppState();
+}
+
+class _JaDeuPlayAppState extends State<JaDeuPlayApp> {
+  bool _temaEscuro = PrefsService.temaEscuro;
+
+  /// O setState aqui reconstrói o MaterialApp, e o tema muda na hora.
+  /// A função desce até a lista pelo AuthGate.
+  void _alternarTema() {
+    setState(() => _temaEscuro = !_temaEscuro);
+    PrefsService.salvarTemaEscuro(_temaEscuro);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +52,8 @@ class JaDeuPlayApp extends StatelessWidget {
       title: 'Já deu play?',
       theme: AppTheme.claro,
       darkTheme: AppTheme.escuro,
-      // Por enquanto fixo; na etapa 5 virá do SharedPreferences
-      themeMode: ThemeMode.light,
-      home: const AuthGate(),
+      themeMode: _temaEscuro ? ThemeMode.dark : ThemeMode.light,
+      home: AuthGate(aoAlternarTema: _alternarTema),
     );
   }
 }

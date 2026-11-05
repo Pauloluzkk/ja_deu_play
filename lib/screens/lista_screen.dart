@@ -1,6 +1,6 @@
-// Tela principal: mostra a watchlist do usuário logado e leva para
-// adicionar, editar, excluir e sair. Sem resposta do Firestore, mostra
-// os dados salvos no aparelho pelo Hive.
+// Tela principal: mostra a watchlist do usuário logado, com filtro e ordenação,
+// e leva para adicionar, editar, excluir, trocar o tema e sair. Sem resposta
+// do Firestore, mostra os dados salvos no aparelho pelo Hive.
 
 import 'package:flutter/material.dart';
 
@@ -8,13 +8,16 @@ import '../models/filme.dart';
 import '../services/auth_service.dart';
 import '../services/cache_service.dart';
 import '../services/firestore_service.dart';
+import '../services/prefs_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/filme_card.dart';
 import '../widgets/logo_app.dart';
 import 'formulario_screen.dart';
 
 class ListaScreen extends StatefulWidget {
-  const ListaScreen({super.key});
+  final VoidCallback aoAlternarTema;
+
+  const ListaScreen({super.key, required this.aoAlternarTema});
 
   @override
   State<ListaScreen> createState() => _ListaScreenState();
@@ -26,6 +29,8 @@ class _ListaScreenState extends State<ListaScreen> {
   late final Stream<List<Filme>> _filmes;
   bool _saindo = false;
   String? _idExcluindo;
+  String _filtroStatus = PrefsService.filtroStatus;
+  String _ordenacao = PrefsService.ordenacao;
 
   @override
   void initState() {
@@ -42,6 +47,32 @@ class _ListaScreenState extends State<ListaScreen> {
     return CacheService.listar()
         .where((filme) => filme.userId == AuthService.idUsuario)
         .toList();
+  }
+
+  void _escolherFiltro(String filtro) {
+    setState(() => _filtroStatus = filtro);
+    PrefsService.salvarFiltroStatus(filtro);
+  }
+
+  void _escolherOrdenacao(String ordenacao) {
+    setState(() => _ordenacao = ordenacao);
+    PrefsService.salvarOrdenacao(ordenacao);
+  }
+
+  /// Aplica o filtro de status e a ordenação escolhidos pelo usuário.
+  List<Filme> _organizar(List<Filme> filmes) {
+    final resultado = filmes
+        .where((f) => _filtroStatus == 'todos' || f.status == _filtroStatus)
+        .toList();
+    switch (_ordenacao) {
+      case 'ano':
+        resultado.sort(Filme.compararPorAno);
+      case 'nota':
+        resultado.sort(Filme.compararPorNota);
+      default:
+        resultado.sort(Filme.compararPorTitulo);
+    }
+    return resultado;
   }
 
   void _mostrarMensagem(String mensagem) {
@@ -152,7 +183,12 @@ class _ListaScreenState extends State<ListaScreen> {
     );
   }
 
-  Widget _montarCartoes(List<Filme> filmes) {
+  Widget _montarCartoes(List<Filme> todos) {
+    final filmes = _organizar(todos);
+    if (filmes.isEmpty) {
+      return const _Aviso(texto: 'Nenhum título com este status.');
+    }
+
     return ListView.builder(
       // Espaço no fim para o botão + não cobrir o último cartão
       padding: const EdgeInsets.only(top: 8, bottom: 88),
@@ -169,12 +205,45 @@ class _ListaScreenState extends State<ListaScreen> {
     );
   }
 
+  Widget _chipFiltro(String texto, String filtro) {
+    return ChoiceChip(
+      label: Text(texto),
+      selected: _filtroStatus == filtro,
+      onSelected: (_) => _escolherFiltro(filtro),
+    );
+  }
+
+  CheckedPopupMenuItem<String> _itemOrdenacao(String texto, String ordenacao) {
+    return CheckedPopupMenuItem(
+      value: ordenacao,
+      checked: _ordenacao == ordenacao,
+      child: Text(texto),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final escuro = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Já deu play?'),
         actions: [
+          IconButton(
+            tooltip: escuro ? 'Usar tema claro' : 'Usar tema escuro',
+            onPressed: widget.aoAlternarTema,
+            icon: Icon(escuro ? Icons.light_mode : Icons.dark_mode),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Ordenar',
+            icon: const Icon(Icons.sort),
+            onSelected: _escolherOrdenacao,
+            itemBuilder: (context) => [
+              _itemOrdenacao('Título', 'titulo'),
+              _itemOrdenacao('Ano', 'ano'),
+              _itemOrdenacao('Nota', 'nota'),
+            ],
+          ),
           IconButton(
             tooltip: 'Sair',
             onPressed: _saindo ? null : _sair,
@@ -188,9 +257,29 @@ class _ListaScreenState extends State<ListaScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<List<Filme>>(
-        stream: _filmes,
-        builder: _montarLista,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  _chipFiltro('Todos', 'todos'),
+                  _chipFiltro('Quero ver', 'quero_ver'),
+                  _chipFiltro('Assistido', 'assistido'),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<Filme>>(
+              stream: _filmes,
+              builder: _montarLista,
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Adicionar título',
