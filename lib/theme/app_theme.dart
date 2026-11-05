@@ -30,6 +30,18 @@ class AppTheme {
   static const double raio = 16;
   static const double espessuraBorda = 2;
 
+  /// Espera as fontes antes da primeira tela: um chip desenhado antes da fonte
+  /// carregar fica com o texto cortado. Sem internet na primeira abertura, o
+  /// download falha ou demora, e o app abre mesmo assim com a fonte do sistema.
+  static Future<void> carregarFontes() async {
+    try {
+      await GoogleFonts.pendingFonts([claro, escuro])
+          .timeout(const Duration(seconds: 3));
+    } catch (erro) {
+      // As fontes continuam carregando e entram quando ficarem prontas
+    }
+  }
+
   static ThemeData get claro => _montarTema(
         const ColorScheme(
           brightness: Brightness.light,

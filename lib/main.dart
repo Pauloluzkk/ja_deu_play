@@ -25,6 +25,7 @@ void main() async {
   await Hive.openBox('filmes_cache');
 
   await PrefsService.carregar();
+  await AppTheme.carregarFontes();
 
   runApp(const JaDeuPlayApp());
 }
