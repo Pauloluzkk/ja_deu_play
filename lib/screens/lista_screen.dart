@@ -12,6 +12,7 @@ import '../services/prefs_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/filme_card.dart';
 import '../widgets/logo_app.dart';
+import 'busca_omdb_screen.dart';
 import 'formulario_screen.dart';
 
 class ListaScreen extends StatefulWidget {
@@ -85,6 +86,12 @@ class _ListaScreenState extends State<ListaScreen> {
   void _abrirFormulario([Filme? filme]) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => FormularioScreen(filme: filme)),
+    );
+  }
+
+  void _abrirBusca() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const BuscaOmdbScreen()),
     );
   }
 
@@ -229,6 +236,11 @@ class _ListaScreenState extends State<ListaScreen> {
       appBar: AppBar(
         title: const Text('Já deu play?'),
         actions: [
+          IconButton(
+            tooltip: 'Buscar na OMDb',
+            onPressed: _abrirBusca,
+            icon: const Icon(Icons.search),
+          ),
           IconButton(
             tooltip: escuro ? 'Usar tema claro' : 'Usar tema escuro',
             onPressed: widget.aoAlternarTema,

@@ -1,5 +1,5 @@
-// Formulário usado para criar um título novo (filme == null)
-// e para editar um título que já existe.
+// Formulário usado para criar um título novo e para editar um que já existe.
+// Um título novo pode vir preenchido com os dados de uma busca na OMDb.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,9 +11,10 @@ import '../widgets/botao_carregando.dart';
 import '../widgets/estrelas_nota.dart';
 
 class FormularioScreen extends StatefulWidget {
-  final Filme? filme;
+  final Filme? filme; // título que já existe, para editar
+  final Filme? preenchimento; // dados iniciais de um título novo
 
-  const FormularioScreen({super.key, this.filme});
+  const FormularioScreen({super.key, this.filme, this.preenchimento});
 
   @override
   State<FormularioScreen> createState() => _FormularioScreenState();
@@ -37,10 +38,11 @@ class _FormularioScreenState extends State<FormularioScreen> {
   @override
   void initState() {
     super.initState();
-    final filme = widget.filme;
+    final filme = widget.filme ?? widget.preenchimento;
     if (filme != null) {
       _campoTitulo.text = filme.titulo;
-      _campoAno.text = filme.ano.toString();
+      // Ano zero vem de um resultado da OMDb sem ano: o campo fica vazio
+      _campoAno.text = filme.ano == 0 ? '' : filme.ano.toString();
       _campoComentario.text = filme.comentario;
       _tipo = filme.tipo;
       _status = filme.status;
@@ -73,11 +75,11 @@ class _FormularioScreenState extends State<FormularioScreen> {
 
     setState(() => _salvando = true);
     try {
-      // Pôster, imdbId e data de criação não são editados aqui,
-      // mas precisam ser mantidos ao salvar uma edição.
-      final original = widget.filme;
+      // Pôster, imdbId e data de criação não são editados aqui, mas precisam
+      // ser mantidos ao editar ou ao salvar um resultado da OMDb.
+      final original = widget.filme ?? widget.preenchimento;
       final filme = Filme(
-        id: original?.id ?? _idNovo,
+        id: widget.filme?.id ?? _idNovo,
         titulo: _campoTitulo.text.trim(),
         ano: int.parse(_campoAno.text),
         tipo: _tipo,
